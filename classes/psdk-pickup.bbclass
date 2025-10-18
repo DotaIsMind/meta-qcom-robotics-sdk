@@ -11,7 +11,7 @@ python do_install () {
     # move setup script to /usr/share dir
     SETUP_DEST_PATH="/usr/share/"
     SETUP_SCRIPT_FILE="qirp-setup.sh"
-    cp_cmd = "mkdir -p %s && cp %s %s" %(outputdir + SETUP_DEST_PATH, d.getVar('WORKDIR') + "/" + SETUP_SCRIPT_FILE, outputdir + SETUP_DEST_PATH)
+    cp_cmd = "mkdir -p %s && cp %s %s" %(outputdir + SETUP_DEST_PATH, d.getVar('UNPACKDIR') + "/" + SETUP_SCRIPT_FILE, outputdir + SETUP_DEST_PATH)
     bb.note(cp_cmd)
     subprocess.call(cp_cmd,shell=True)
 }

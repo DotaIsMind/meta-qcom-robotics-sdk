@@ -46,10 +46,10 @@ do_generate_product_sdk () {
 
     bbnote " copy workspace scripts install.sh uninstall.sh qirp-upgrade.sh from ${WORKDOR}to target workdir "
     for script in ${RUNTIME_SCRIPTS}; do
-        if [ -e "${WORKDIR}/${script}" ]; then
-            cp "${WORKDIR}/${script}" ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/scripts
+        if [ -e "${UNPACKDIR}/${script}" ]; then
+            cp "${UNPACKDIR}/${script}" ${TMP_SSTATE_IN_DIR}/${SDK_PN}/runtime/scripts
         else
-            bbwarn "${script} not exist in ${WORKDIR} , double check please"
+            bbwarn "${script} not exist in ${UNPACKDIR} , double check please"
         fi
     done
 
@@ -82,7 +82,7 @@ python do_overlay_config () {
     import json
     import os
 
-    workdir = d.getVar('WORKDIR')
+    workdir = d.getVar('UNPACKDIR')
     config_file = d.getVar('CONFIGFILE')
     overlay_file = d.getVar('CONFIG_OVERLAY_FILE')
 
@@ -130,7 +130,7 @@ organize_sdk_file () {
     fi
 
     # orgnanize QIRP sample codes
-    CONFIG_FILE="${WORKDIR}/${CONFIGFILE}"
+    CONFIG_FILE="${UNPACKDIR}/${CONFIGFILE}"
     sed -i "s/CUST_ID/${CUST_ID}/g" ${CONFIG_FILE}
     jq -c '.samples[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
@@ -177,14 +177,14 @@ organize_sdk_file () {
     done
 
     #orgnanize QIRP sample.json
-    SAMPLE_JESON="${WORKDIR}/samples.json"
+    SAMPLE_JESON="${UNPACKDIR}/samples.json"
     if [ -n "$SAMPLE_JESON" ]; then
         cp $SAMPLE_JESON ${SSTATE_IN_DIR}/${SDK_PN}/qirp-samples/
     fi
 
     jq -c '.scripts[]' $CONFIG_FILE | while read line; do
         name=$(echo $line | jq -r '.name')
-        from_local="${WORKDIR}/$(echo $line | jq -r '.from_local')"
+        from_local="${UNPACKDIR}/$(echo $line | jq -r '.from_local')"
         to="${SSTATE_IN_DIR}/${SDK_PN}/$(echo $line | jq -r '.to')"
 
         if [ -d "$from_local$name" ]; then
