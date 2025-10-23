@@ -41,3 +41,10 @@ DEPENDS:append = " \
 "
 
 DEPENDS:append:qcom-custom-bsp = "${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-qim-product-sdk', '', ' qti-qim-product-sdk ', d)}"
+
+do_lic_install() {
+    install -d ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}
+    install -m 0644 ${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear \
+        ${LICENSE_DIRECTORY}/${SSTATE_PKGARCH}/${PN}/generic_BSD-3-Clause-Clear
+}
+addtask lic_install after do_install before do_package
