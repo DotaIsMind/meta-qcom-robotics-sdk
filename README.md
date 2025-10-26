@@ -26,6 +26,35 @@ to collectively build the **QIR SDK**.
 
 **scarthgap**: Primary development branch. Contributors should develop submissions based on this branch, and submit pull requests to this branch.
 
+## Quick build
+
+Please refer to the [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/system-requirements.html)
+to set up your Yocto Project build environment.
+
+Please follow the instructions below for a KAS-based build. The KAS tool offers
+an easy way to setup bitbake based projects. For more details, visit the
+[KAS documentation](https://kas.readthedocs.io/en/latest/index.html).
+
+1. Install kas tool
+
+    ```
+    sudo pip3 install kas
+    ```
+
+2. Clone meta-qcom-robotics-sdk layer
+
+    ```
+    git clone https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git -b main
+    ```
+
+3. Build using the KAS configuration for one of the supported boards
+
+    ```
+    kas build meta-qcom-robotics-sdk/ci/qcs6490-rb3gen2-core-kit-ros-jazzy-full-image.yml
+    ```
+
+For a manual build without KAS, refer to the [Yocto Project Quick Build](https://docs.yoctoproject.org/brief-yoctoprojectqs/index.html).
+
 ## Usage
 
 As part of QIR, this project requires ​​collaborative usage with other components​​. Detailed instructions are provided in:
