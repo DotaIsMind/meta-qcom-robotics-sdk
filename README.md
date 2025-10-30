@@ -1,3 +1,4 @@
+**After repository creation:**
 - [ ] Update this `README.md`. Update the Project Name, description, and all sections. Remove this checklist.
 - [ ] If required, update `LICENSE.txt` and the License section with your project's approved license
 - [ ] Search this repo for "REPLACE-ME" and update all instances accordingly
