@@ -1,6 +1,8 @@
 name: Build Yocto
 
 on:
+  workflow_dispatch:
+
   workflow_call:
     outputs:
       artifacts_url:
@@ -8,33 +10,36 @@ on:
         value: ${{ jobs.create-output.outputs.url }}
 
 env:
-  CACHE_DIR: /efs/qli/meta-qcom
-  KAS_REPO_REF_DIR: /efs/qli/meta-qcom/kas-mirrors
-  KAS_CONTAINER: /efs/qli/meta-qcom/kas-mirrors/kas-container
+  CACHE_DIR: ${{ github.workspace }}/.cache/meta-qcom
+  KAS_REPO_REF_DIR: ${{ github.workspace }}/.cache/meta-qcom/kas-mirrors
+  KAS_CONTAINER: ${{ github.workspace }}/.cache/meta-qcom/kas-mirrors/kas-container
 
 jobs:
   kas-setup:
     if: github.repository == 'DotaIsMind/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: ubuntu-latest
     steps:
       - name: Update kas-container
         run: |
+          mkdir -p "${KAS_REPO_REF_DIR}"
           LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
-          wget -qO ${KAS_CONTAINER} https://raw.githubusercontent.com/siemens/kas/refs/tags/$LATEST/kas-container
-          chmod +x ${KAS_CONTAINER}
+          wget -qO "${KAS_CONTAINER}" "https://raw.githubusercontent.com/siemens/kas/refs/tags/${LATEST}/kas-container"
+          ls -al "${KAS_REPO_REF_DIR}"
+          chmod +x "${KAS_CONTAINER}"
 
       - name: Update kas mirrors
         run: |
-          for r in $(find ${KAS_REPO_REF_DIR}/* -maxdepth 0 -type d); do
+          mkdir -p "${KAS_REPO_REF_DIR}"
+          for r in $(find "${KAS_REPO_REF_DIR}" -mindepth 1 -maxdepth 1 -type d || true); do
             echo "pre-fetch: $r"
-            git -C $r fetch --prune origin '+refs/*:refs/*'
+            git -C "$r" fetch --prune origin '+refs/*:refs/*' || true
           done
 
       - uses: actions/checkout@v4
 
       - name: Run kas lock
         run: |
-          ${KAS_CONTAINER} lock --update ci/robotics-base.yml:ci/qcs9100-ride-sx-ros-jazzy-base-image.yml
+          ${KAS_CONTAINER} lock --update ci/base.yml:ci/qcom-distro.yml
 
       - uses: actions/upload-artifact@v4
         with:
@@ -44,7 +49,7 @@ jobs:
   yocto-run-checks:
     needs: kas-setup
     if: github.repository == 'DotaIsMind/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -64,13 +69,12 @@ jobs:
   compile_warm_up:
     needs: [kas-setup, yocto-run-checks]
     if: github.repository == 'DotaIsMind/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         machine:
           - qcs6490-rb3gen2-core-kit
-          - qcom-armv8a
         distro:
           - name: poky-altcfg
             yamlfile: ""
@@ -100,18 +104,28 @@ jobs:
   compile:
     needs: compile_warm_up
     if: github.repository == 'DotaIsMind/meta-qcom-robotics-sdk'
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: ubuntu-latest
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
     strategy:
       fail-fast: true
       matrix:
         machine:
+          - iq-8275-evk
           - iq-9075-evk
+          - qcm6490-idp
+          - qcs615-adp-air
+          - qcs8300-ride-sx
+          - qcs9100-ride-sx
+          - qrb2210-rb1-core-kit
+          - qcom-armv7a
         distro:
-          - name: ros-jazzy-base-image
-            yamlfile: ':ci/qcs9100-ride-sx-ros-jazzy-base-image.yml'
-
+          - name: poky-altcfg
+            yamlfile: ""
+          - name: qcom-distro
+            yamlfile: ':ci/qcom-distro.yml'
+          - name: qcom-distro-prop-image
+            yamlfile: ':ci/qcom-distro-prop-image.yml'
         kernel:
           - type: default
             dirname: ""
@@ -155,9 +169,19 @@ jobs:
           cache_dir: ${CACHE_DIR}
           kas: ${KAS_CONTAINER}
 
+  kas-build:
+    needs: [compile_warm_up]
+    if: github.repository == 'DotaIsMind/meta-qcom-robotics-sdk'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run kas build (ros-jazzy-base-image)
+        run: |
+          ${KAS_CONTAINER} build ci/qcs9100-ride-sx-ros-jazzy-base-image.yml
+
   publish_summary:
     needs: compile
-    runs-on: [self-hosted, qcom-u2404, amd64-ssd]
+    runs-on: ubuntu-latest
     steps:
       - name: 'Download build URLs'
         uses: actions/download-artifact@v4
@@ -191,5 +215,4 @@ jobs:
           overwrite: true
           name: build_url
           path: build_url
-
 
