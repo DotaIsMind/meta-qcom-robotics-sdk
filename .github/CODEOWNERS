@@ -1,6 +1,6 @@
 # Default reviewers for all changes in entire repository,
 # unless a later match takes precedence
-*  @tengf @huiyqiu
+*  @DapengYuan-David @huiyqiu @fulaliu @DotaIsMind
 
 # Reviewers to be assigned for any changes in ci/ subdirectory
-ci/*  @tengf @huiyqiu
+ci/*  @DapengYuan-David @huiyqiu @fulaliu @quic-weijshen
