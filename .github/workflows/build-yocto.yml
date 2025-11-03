@@ -25,6 +25,7 @@ jobs:
           LATEST=$(git ls-remote --tags --refs --sort="v:refname" https://github.com/siemens/kas | tail -n1 | sed 's/.*\///')
           wget -qO "${KAS_CONTAINER}" "https://raw.githubusercontent.com/siemens/kas/refs/tags/${LATEST}/kas-container"
           ls -al "${KAS_REPO_REF_DIR}"
+          file "KAS_CONTAINER" || true
           chmod +x "${KAS_CONTAINER}"
       
       - name: Upload kas-container artifact
