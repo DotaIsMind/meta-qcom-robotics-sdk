@@ -1,14 +1,3 @@
-<!-- SPDX-License-Identifier: BSD-3-Clause-Clear -->
-# Welcome to the Qualcomm Intelligent Robotics SDK (QIR SDK)
-
-The Qualcomm® Intelligent Robotics(QIR) SDK is a collection of components that enable you to develop robotic features on Qualcomm platforms. This SDK is applicable to the Qualcomm Linux releases.
-
-The QIR SDK provides the following:
-- Reference code in Robot Operating System (ROS) packages to develop robotic applications.
-- E2E(end-to-end) scenario samples to evaluate robotic platforms.
-- Integrated cross-compile toolchain, which includes common build tools, such as aarch64-oe-linux-gcc, make, cmake, and ROS core.
-- Tools and scripts to speed up the development.
-- Provide some basic ROS nodes to help you build your ros application, such as qrb_ros_camera, qrb_ros_nn_inference,etc.
 
 This will guide you through developing your first sample application. It explains how to:
 - Flash the prebuilt Qualcomm linux image and configure the environment.
