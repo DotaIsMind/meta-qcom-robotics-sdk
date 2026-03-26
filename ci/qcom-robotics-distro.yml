@@ -10,7 +10,7 @@ repos:
 
   meta-qcom:
       url: https://github.com/qualcomm-linux/meta-qcom
-      commit: 3b2c2c8b815e135a01db7b6a77e3a0c57048bca8
+      commit: b765fe140e93ca1f6607c33f2a193bc545c9bc0d
   oe-core:
       url: https://github.com/openembedded/openembedded-core
       layers:
@@ -19,16 +19,16 @@ repos:
           fix-BSD-license-missing:
               repo: meta-qcom-robotics-sdk
               path: patches/Initial-commit-of-license.patch
-      commit: d3e757f21403554e7064c5fa2b353080d14d2ce7
+      commit: 8061433fcd11eba91a29004dfafd175d449fb2fd
   bitbake:
       url: https://github.com/openembedded/bitbake
       layers:
           .: disabled
-      commit: 48efc36b4e03f736e7521d269ced3417522784e9
+      commit: e7d5e156275782948d3346f299780389ab263ab6
   meta-qcom-distro:
       url: https://github.com/qualcomm-linux/meta-qcom-distro
       branch: main
-      commit: 98e83ead3caa95184d2a37e02b4b6928caa754a4
+      commit: a6a98025fab52a90c2c9517ca66cb8f1bf9a9b7a
   meta-openembedded:
       url: https://github.com/openembedded/meta-openembedded
       layers:
@@ -39,30 +39,34 @@ repos:
           meta-oe:
           meta-python:
           meta-xfce:
-      commit: 7bc5268662f1428bdbca08e14d223aa6b62e87f3
+      commit: b883bd25cdd27560fdebc5a4bf56f90e99964c4c
   meta-virtualization:
       url: https://git.yoctoproject.org/git/meta-virtualization
       branch: master
-      commit: a1e1a021b49f5257d8908aa9b8c2ee9c083e674c
+      commit: 475530ac08ecf716917f48dfa60e0607d324ff9a
   meta-audioreach:
       url: https://github.com/AudioReach/meta-audioreach
       branch: master
-      commit: 7cd6eeb2c6bfda35a622df9a37eb5bbf0371253e
+      commit: 1d60c211c874bb342d27699e717d53bde94f7299
   meta-selinux:
       branch: master
       url: https://git.yoctoproject.org/meta-selinux
-      commit: 27758bca5ad8f74f387de5cc7c88e73ef2aed951
+      commit: 50803c3dd3d42bfe060b96a094c01d9075e37f41
   meta-updater:
       branch: master
       url: https://github.com/uptane/meta-updater
-      commit: 9fb4d7e2c087511d3dff233ebd342f35facf4cde
+      commit: 399ca9f0b99a1b1fd38c27df7aa1bf21b232ba30
   meta-security:
       url: https://git.yoctoproject.org/meta-security
       branch: master
+      patches:
+           plain:
+               repo: meta-qcom
+               path: 0001-meta-security-layers-update-for-wrynose-release-series.patch
       layers:
           .:
           meta-tpm:
-      commit: 9e6d962250aab6e5319215f15b0201ef233c46cd
+      commit: 0936595355433f9691fd30257743865b9ae27a1d
 
   meta-ros:
       url: https://github.com/ros/meta-ros.git
@@ -81,6 +85,12 @@ repos:
           qcom-fixes3:
               repo: meta-qcom-robotics-sdk
               path: patches/0003-jazzy-move-some-nav2-and-moveit-packages-out-of-blac.patch
+          ament_cmake_py_fix:
+              repo:  meta-qcom-robotics-sdk
+              path: patches/0001-ros2-ament_cmake-add-python-configurations-for-class.patch
+          qcom-fixes4:
+              repo: meta-qcom-robotics-sdk
+              path: patches/0001-fix-Update-LAYERSERIES_COMPAT-to-adapt-to-upstream-u.patch
       commit: fceba46917fe9473e64534d972d3cf853aa7674d
 
 local_conf_header:

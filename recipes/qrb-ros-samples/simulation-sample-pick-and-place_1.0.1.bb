@@ -1,5 +1,9 @@
+LICENSE = "BSD-3-Clause-Clear"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/BSD-3-Clause-Clear;md5=7a434440b651f4a472ca93716d01033a"
+
 inherit ros_distro_${ROS_DISTRO}
 inherit ros_component
+inherit ros_component robotics-package
 
 ROS_BUILD_TYPE = "ament_cmake"
 
@@ -11,7 +15,11 @@ ROS_BUILD_TYPE = "ament_cmake"
 ROS_CN = "simulation_sample_pick_and_place"
 ROS_BPN = "simulation_sample_pick_and_place"
 
-S = "${WORKDIR}/git/robotics/${ROS_CN}"
+SRC_URI = "git://github.com/qualcomm-qrb-ros/qrb_ros_samples.git;protocol=https;branch=stable-simulation_sample_pick_and_place/1.0.1"
+
+SRCREV = "66132278d624a1464df6a5e8562f0bd3419d46e6"
+
+# S = "${UNPACKDIR}/${PN}-${PV}/robotics/${ROS_CN}"
 
 ROS_BUILD_DEPENDS = " \
     ament-cmake \
@@ -26,12 +34,6 @@ ROS_BUILD_DEPENDS = " \
 
 ROS_BUILDTOOL_DEPENDS = " \
     ament-cmake-native \
-    cmake-native \
-    ament-cmake-auto-native \
-    ament-cmake-ros-native \
-"
-
-ROS_EXPORT_DEPENDS = " \
 "
 
 ROS_TEST_DEPENDS = " \
@@ -41,19 +43,10 @@ ROS_TEST_DEPENDS = " \
 
 ROS_EXEC_DEPENDS = "${ROS_BUILD_DEPENDS}"
 
-DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS} ${ROS_EXPORT_DEPENDS} ${ROS_TEST_DEPENDS}"
-DEPENDS += "pkgconfig-native"
+DEPENDS = "${ROS_BUILD_DEPENDS} ${ROS_BUILDTOOL_DEPENDS} pkgconfig-native pkgconfig"
 RDEPENDS:${PN} += "${ROS_EXEC_DEPENDS}"
-
-EXTRA_OECMAKE = " \
-    -DCMAKE_SYSROOT=${STAGING_DIR_TARGET} \
-    -DBUILD_TESTING=OFF \
-"
 
 FILES:${PN} += " \
     ${libdir}/${ROS_CN}/* \
     ${datadir}/${ROS_CN}/* \
 "
-
-require include/qrb-ros-samples.inc
-
