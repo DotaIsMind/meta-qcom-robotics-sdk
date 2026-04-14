@@ -570,12 +570,26 @@ jobs:
           def save_yaml(data, file_path):
               """Save YAML file with proper formatting"""
               try:
+                  normalized_data = normalize_none_to_empty_string(data)
                   with open(file_path, 'w') as f:
-                      yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+                      yaml.dump(normalized_data, f, default_flow_style=False, sort_keys=False)
                   return True
               except Exception as e:
                   print(f"❌ Error saving {file_path}: {e}")
                   return False
+          
+          def normalize_none_to_empty_string(value):
+              """Convert None values to empty strings recursively"""
+              if isinstance(value, dict):
+                  return {
+                      key: normalize_none_to_empty_string(val)
+                      for key, val in value.items()
+                  }
+              if isinstance(value, list):
+                  return [normalize_none_to_empty_string(item) for item in value]
+              if value is None:
+                  return ""
+              return value
           
           def merge_repos(target_repos, source_repos):
               """Merge repo commits from source to target"""
