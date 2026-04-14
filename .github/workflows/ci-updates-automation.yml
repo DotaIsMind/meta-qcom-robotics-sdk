@@ -98,48 +98,57 @@ jobs:
                     
                     echo "🔎 Checking Run ID: $CURRENT_RUN_ID (Conclusion: $CURRENT_CONCLUSION)"
                     
-                    # Check if build-nightly task is successful (ignore test-nightly result)
-                    BUILD_NIGHTLY_STATS=$(gh api --paginate \
+                    # Check if build_successful job is successful
+                    BUILD_SUCCESSFUL_STATUS=$(gh api --paginate \
                       -H "Accept: application/vnd.github+json" \
                       -H "X-GitHub-Api-Version: 2022-11-28" \
                       "/repos/$REPO/actions/runs/$CURRENT_RUN_ID/jobs?per_page=100" 2>/dev/null | \
-                      jq -r '[.jobs[]? | select(.name == "build-nightly" or (.name | startswith("build-nightly /"))) | .conclusion] as $c | "\($c | length) \($c | map(select(. == "success")) | length) \($c | map(select(. != "success")) | length)"')
+                      jq -sr '
+                        [
+                          .[] | .jobs[]?
+                          | select(.name == "build-nightly / build_successful" or (.name | endswith(" / build_successful")))
+                          | .conclusion
+                        ]
+                        | if any(. == "success") then "success"
+                          elif length > 0 then .[0]
+                          else "missing"
+                          end
+                      ')
+                    echo "   ℹ️  Paginated merged build_successful status: $BUILD_SUCCESSFUL_STATUS"
                     
-                    read -r BUILD_NIGHTLY_TOTAL BUILD_NIGHTLY_SUCCESS BUILD_NIGHTLY_NON_SUCCESS <<< "$BUILD_NIGHTLY_STATS"
-                    
-                    if [ "${BUILD_NIGHTLY_TOTAL:-0}" -gt 0 ] && [ "${BUILD_NIGHTLY_NON_SUCCESS:-0}" -eq 0 ]; then
+                    if [ "$BUILD_SUCCESSFUL_STATUS" = "success" ]; then
                       RUN_ID="$CURRENT_RUN_ID"
                       RUN_NUMBER=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].run_number")
                       RUN_CREATED=$(echo "$RUNS_JSON" | jq -r ".workflow_runs[$i].created_at")
                       RUN_CONCLUSION="$CURRENT_CONCLUSION"
                       FOUND_SUCCESS=true
-                      echo "   ✅ Found run with successful build-nightly task! ($BUILD_NIGHTLY_SUCCESS/$BUILD_NIGHTLY_TOTAL)"
+                      echo "   ✅ Found run with successful build_successful job!"
                       break
                     else
-                      echo "   ⏭️  Skipping (build-nightly success: ${BUILD_NIGHTLY_SUCCESS:-0}/${BUILD_NIGHTLY_TOTAL:-0})"
+                      echo "   ⏭️  Skipping (build_successful status: $BUILD_SUCCESSFUL_STATUS)"
                     fi
                   done
                   
                   echo ""
                   
                   if [ "$FOUND_SUCCESS" = true ]; then
-                    echo "🎉 Found workflow run with successful build-nightly task"
+                    echo "🎉 Found workflow run with successful build_successful job"
                     echo ""
                     echo "📋 Selected Workflow Run Details:"
                     echo "   Run Number: #$RUN_NUMBER"
                     echo "   Run ID: $RUN_ID"
                     echo "   Created: $RUN_CREATED"
                     echo "   Workflow Conclusion: $RUN_CONCLUSION"
-                    echo "   build-nightly: ✅ success"
+                    echo "   build_successful: ✅ success"
                     break
                   else
-                    echo "⚠️  No runs with successful build-nightly task found in the last $MAX_RUNS_TO_CHECK completed runs"
+                    echo "⚠️  No runs with successful build_successful job found in the last $MAX_RUNS_TO_CHECK completed runs"
                     echo ""
                     echo "❌ FAIL LOG:"
                     echo "   Repository: $REPO"
                     echo "   Workflow: $WORKFLOW_FILE"
                     echo "   Checked: $MAX_RUNS_TO_CHECK most recent completed runs"
-                    echo "   Result: build-nightly task was not successful in checked runs"
+                    echo "   Result: build_successful job was not successful in checked runs"
                     echo ""
                     echo "📊 Run conclusions:"
                     echo "$RUNS_JSON" | jq -r '.workflow_runs[] | "   Run #\(.run_number): \(.conclusion)"'
@@ -152,7 +161,7 @@ jobs:
                       echo "💡 Troubleshooting tips:"
                       echo "   1. Check workflow runs manually:"
                       echo "      https://github.com/$REPO/actions/workflows/$WORKFLOW_FILE"
-                      echo "   2. Verify build-nightly task is successful"
+                      echo "   2. Verify build_successful job is successful"
                       echo "   3. Check if there are any infrastructure issues"
                       echo ""
                       exit 1
@@ -558,6 +567,16 @@ jobs:
           import sys
           from pathlib import Path
           
+          class BlankNullDumper(yaml.SafeDumper):
+              """YAML dumper that renders None as blank value (key: )"""
+              pass
+          
+          def represent_none_as_blank(dumper, _):
+              # Keep YAML null semantics while showing blank style.
+              return dumper.represent_scalar('tag:yaml.org,2002:null', '')
+          
+          BlankNullDumper.add_representer(type(None), represent_none_as_blank)
+          
           def load_yaml(file_path):
               """Load YAML file with safe loader"""
               try:
@@ -570,26 +589,18 @@ jobs:
           def save_yaml(data, file_path):
               """Save YAML file with proper formatting"""
               try:
-                  normalized_data = normalize_none_to_empty_string(data)
                   with open(file_path, 'w') as f:
-                      yaml.dump(normalized_data, f, default_flow_style=False, sort_keys=False)
+                      yaml.dump(
+                          data,
+                          f,
+                          Dumper=BlankNullDumper,
+                          default_flow_style=False,
+                          sort_keys=False
+                      )
                   return True
               except Exception as e:
                   print(f"❌ Error saving {file_path}: {e}")
                   return False
-          
-          def normalize_none_to_empty_string(value):
-              """Convert None values to empty strings recursively"""
-              if isinstance(value, dict):
-                  return {
-                      key: normalize_none_to_empty_string(val)
-                      for key, val in value.items()
-                  }
-              if isinstance(value, list):
-                  return [normalize_none_to_empty_string(item) for item in value]
-              if value is None:
-                  return ""
-              return value
           
           def merge_repos(target_repos, source_repos):
               """Merge repo commits from source to target"""
@@ -857,7 +868,8 @@ jobs:
           git add ci
           
           # Git commit and push changes
-          git rm --cached .github/workflows/ci-updates-automation.yml || true  # Unstage workflow file if it was accidentally added
+          # Unstage workflow file if it was accidentally added, without removing it from index/history
+          git restore --staged .github/workflows/ci-updates-automation.yml || true
           git commit -m "ci(automation): update the commit id from meta-qcom" \
             -m "" \
             -m "Auto-update repository commits from nightly build" \
@@ -907,9 +919,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-          echo "🗑️ Deleting source branch: $BRANCH_NAME ..."
-          git push origin --delete "$BRANCH_NAME"
-          echo "✅ Branch deleted."
+          echo "ℹ️ Keeping source branch for PR lifecycle (review/update/merge)."
 
       - name: Set outputs
         id: set-output
