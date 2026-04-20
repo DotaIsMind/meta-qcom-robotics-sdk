@@ -25,7 +25,7 @@ env:
 jobs:
   kas-setup:
     
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-sm-u2404, amd64]
     steps:
       - name: Setting up kas-container
         run: |
@@ -56,7 +56,7 @@ jobs:
   yocto-run-checks:
     needs: kas-setup
     
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-sm-u2404, amd64]
     steps:
       - uses: actions/checkout@v6
 
@@ -90,7 +90,7 @@ jobs:
   compile:
     needs: [kas-setup, yocto-run-checks]
     
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-sm-u2404, amd64]
     outputs:
       url: ${{ steps.compile_kas.outputs.url }}
     timeout-minutes: 720 # 12 hours
@@ -142,7 +142,7 @@ jobs:
 
   publish_summary:
     needs: compile
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-sm-u2404, amd64]
     steps:
       - name: 'Download build URLs'
         uses: actions/download-artifact@v7
