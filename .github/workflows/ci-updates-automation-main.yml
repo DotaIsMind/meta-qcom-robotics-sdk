@@ -1,4 +1,4 @@
-name: CI Updates Automation
+name: CI Updates Automation (master)
 
 on:
   schedule:
@@ -33,6 +33,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Get latest successful nightly build workflow run
         id: get-workflow-run
@@ -63,7 +65,7 @@ jobs:
               RUNS_JSON=$(gh api \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?status=completed&per_page=$MAX_RUNS_TO_CHECK" 2>&1)
+                "/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?status=completed&branch=master&per_page=$MAX_RUNS_TO_CHECK" 2>&1)
               
               API_EXIT_CODE=$?
               
@@ -870,7 +872,7 @@ jobs:
           # Git commit and push changes
           # Unstage workflow file if it was accidentally added, without removing it from index/history
           git restore --staged .github/workflows/ci-updates-automation.yml || true
-          git commit -m "ci(automation): update the commit id from meta-qcom" \
+          git commit -m "ci(automation): update the commit id from meta-qcom (master)" \
             -m "" \
             -m "Auto-update repository commits from nightly build" \
             -m "" \
@@ -893,11 +895,11 @@ jobs:
             --repo qualcomm-linux/meta-qcom-robotics-sdk \
             --head DotaIsMind:$BRANCH_NAME \
             --base main \
-            --title "ci(automation): update the commit id from meta-qcom: ${{ steps.get-workflow-run.outputs.run_id }}" \
+            --title "ci(automation): update the commit id from meta-qcom (master): ${{ steps.get-workflow-run.outputs.run_id }}" \
             --body "$(cat << 'EOF'
-          ## Auto-update from meta-qcom Nightly Build
+          ## Auto-update from meta-qcom Nightly Build (master)
 
-          This pull request automatically updates the repository commits from the latest meta-qcom nightly build.
+          This pull request automatically updates the repository commits from the latest meta-qcom master nightly build.
 
           **Build Details:**
           - meta-qcom nightly build url: ${{ steps.get-workflow-run.outputs.workflow_url }}
