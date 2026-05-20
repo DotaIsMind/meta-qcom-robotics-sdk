@@ -15,8 +15,13 @@ jobs:
       github.event.pull_request.base.ref == 'main'
     steps:
       - uses: actions/checkout@v6
+      - name: Fetch and rebase backport branch (if exists)
+        run: |
+          git fetch origin backport/${pull_number}-to-${target_branch} || true
+          git rebase origin/backport/${pull_number}-to-${target_branch} || true
+        continue-on-error: true
       - name: Create backport pull requests
-        uses: korthout/backport-action@7c3f6cd5843cac11bc59a04a1b7699af93261670 # 4.5.0
+        uses: korthout/backport-action@7c3f6cd5843cac11bc59a04a1b7699af93261670
         with:
           # backport -----
           github_token: ${{ secrets.PR_AUTO_MERGE_TOKEN }}
