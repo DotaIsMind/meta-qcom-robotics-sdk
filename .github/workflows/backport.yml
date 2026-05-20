@@ -14,6 +14,40 @@ jobs:
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main'
     steps:
+      - name: Debug token permissions
+        env:
+          TOKEN: ${{ secrets.PR_AUTO_MERGE_TOKEN }}
+        run: |
+          echo "=== Authenticated user ==="
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user | jq '{login, type}'
+
+          echo "=== Token scopes (classic PAT shows here, fine-grained shows empty) ==="
+          curl -sI -H "Authorization: Bearer $TOKEN" \
+            https://api.github.com/user \
+            | grep -i "x-oauth-scopes"
+
+          echo "=== Repo-level permissions for this token ==="
+          curl -s -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/DotaIsMind/meta-qcom-robotics-sdk \
+            | jq '.permissions'
+
+          echo "=== Test: can READ pulls? ==="
+          curl -s -o /dev/null -w "HTTP %{http_code}\n" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/DotaIsMind/meta-qcom-robotics-sdk/pulls
+
+          echo "=== Test: PR creation — capture required permissions from error header ==="
+          curl -sI -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -d '{"title":"debug","head":"__debug__","base":"wrynose"}' \
+            https://api.github.com/repos/DotaIsMind/meta-qcom-robotics-sdk/pulls \
+            | grep -i "x-accepted-github-permissions\|http/"
+
       - uses: actions/checkout@v6
       - name: Fetch and rebase backport branch (if exists)
         run: |
