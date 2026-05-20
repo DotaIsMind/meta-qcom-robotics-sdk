@@ -1,4 +1,4 @@
-CRs-Fixed: [CR number(s)]
+CRs-Fixed: CR number(s)
 
 **Motivation:**
 Describe the motivation behind the changes.
