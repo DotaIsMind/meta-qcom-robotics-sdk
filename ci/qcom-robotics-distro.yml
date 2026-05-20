@@ -48,7 +48,7 @@ repos:
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
     branch: master
-    commit: 75402c8d1ea1203dcf3a63792161f7d5d93946bb
+    commit: 4feaf103f9525e467fbefddbefd2e55465c88656
   meta-selinux:
     url: https://git.yoctoproject.org/meta-selinux
     commit: f7306d7af4425553684a860df6f6d0ee66efba31
@@ -61,7 +61,7 @@ repos:
     layers:
       .:
       meta-tpm:
-    commit: 596b966a0d047c2f48cb768821558e918ae0c477
+    commit: 9265f142f3890df2d00d71d13b19e95a082707ed
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master

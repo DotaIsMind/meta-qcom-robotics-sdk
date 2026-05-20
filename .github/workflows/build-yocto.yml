@@ -62,7 +62,7 @@ jobs:
   yocto-run-checks:
     needs: kas-setup
     
-    runs-on: [self-hosted, qcom-u2404, amd64]
+    runs-on: [self-hosted, qcom-sm-u2404, amd64]
     steps:
       - uses: actions/checkout@v6
         with:
