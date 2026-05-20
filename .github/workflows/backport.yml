@@ -26,7 +26,7 @@ jobs:
           echo "=== Token scopes (classic PAT shows here, fine-grained shows empty) ==="
           curl -sI -H "Authorization: Bearer $TOKEN" \
             https://api.github.com/user \
-            | grep -i "x-oauth-scopes"
+            | grep -i "x-oauth-scopes" || true
 
           echo "=== Repo-level permissions for this token ==="
           curl -s -H "Authorization: Bearer $TOKEN" \
@@ -46,7 +46,7 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             -d '{"title":"debug","head":"__debug__","base":"wrynose"}' \
             https://api.github.com/repos/DotaIsMind/meta-qcom-robotics-sdk/pulls \
-            | grep -i "x-accepted-github-permissions\|http/"
+            | grep -i "x-accepted-github-permissions\|http/" || true
 
       - uses: actions/checkout@v6
       - name: Fetch and rebase backport branch (if exists)
