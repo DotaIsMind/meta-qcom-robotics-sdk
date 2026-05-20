@@ -12,7 +12,7 @@ on:
       use_sstate:
         description: "Use SSTATE cache"
         required: false
-        default: "false"
+        default: "true"
 
 permissions:
   checks: write
