@@ -2,15 +2,12 @@ header:
   version: 14
   includes:
   - ci/qcom-distro.yml
-defaults:
-  repos:
-    branch: wrynose
 repos:
   meta-qcom-robotics-sdk:
-    branch: wrynose
+    branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: 1d8cc4e243763001067779a03766fee411caa2ff
+    commit: 4c74258d8c3f36eeb87f3bdb34ee69d75e7f261e
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -22,14 +19,13 @@ repos:
     commit: 42fa856a00ac16b2a7a83d7ecfa60a5be192b16c
   bitbake:
     url: https://github.com/openembedded/bitbake
-    branch: '2.18'
     layers:
       .: disabled
-    commit: a2dd9be788274d9c7280be5b1be5eb5c3990cf54
+    commit: cb28befc56d201cace72d70891e731b955fb567f
   meta-qcom-distro:
-    branch: wrynose
     url: https://github.com/qualcomm-linux/meta-qcom-distro
-    commit: e70ea44ded665bdd9814fd8de8ae8e5bcfac4e30
+    branch: main
+    commit: 23c23d2a6e904418517cf66507c3078829ae7bdf
   meta-openembedded:
     url: https://github.com/openembedded/meta-openembedded
     layers:
@@ -44,17 +40,19 @@ repos:
   meta-virtualization:
     url: https://git.yoctoproject.org/meta-virtualization
     branch: master
-    commit: 052241689a0c419d13e15e83e7ad65dd16fc8ffd
+    commit: 4ba5825ee16fcded87f4d555b4ed7a7615dc67ac
   meta-audioreach:
     url: https://github.com/AudioReach/meta-audioreach
     branch: master
     commit: 4feaf103f9525e467fbefddbefd2e55465c88656
   meta-selinux:
+    branch: master
     url: https://git.yoctoproject.org/meta-selinux
     commit: f7306d7af4425553684a860df6f6d0ee66efba31
   meta-updater:
+    branch: master
     url: https://github.com/uptane/meta-updater
-    commit: 7fbd0d7d73d4e252ee31e5260e547cbf17945a82
+    commit: a8af24357121dc8614fd98f234b73d55005b0cc9
   meta-security:
     url: https://git.yoctoproject.org/meta-security
     branch: master
@@ -86,7 +84,7 @@ repos:
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
-    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=8)}"
+    CPU_COUNT = "${@oe.utils.cpu_count(at_least=2, at_most=9)}"
 
 
     # Number of parallel threads make can run based on cpu cores with a max cap at
