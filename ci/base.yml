@@ -7,7 +7,7 @@ distro: nodistro
 
 defaults:
   repos:
-    branch: wrynose
+    branch: master
 
 repos:
   meta-qcom:
@@ -19,7 +19,6 @@ repos:
 
   bitbake:
     url: https://github.com/openembedded/bitbake
-    branch: "2.18"
     layers:
       .: disabled
 
