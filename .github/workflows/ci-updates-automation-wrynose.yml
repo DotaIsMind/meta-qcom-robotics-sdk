@@ -610,7 +610,7 @@ jobs:
               updated_repos = []
               
               for repo_name, repo_data in source_repos.items():
-                  if repo_name in target_repos and isinstance(repo_data, dict):
+                  if repo_name in target_repos and isinstance(repo_data, dict) and repo_name != 'meta-qcom' and repo_name != 'meta-qcom-distro':
                       if 'commit' in repo_data:
                           old_commit = target_repos[repo_name].get('commit', 'N/A')
                           new_commit = repo_data['commit']
@@ -852,9 +852,13 @@ jobs:
           git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b wrynose temp_meta_qcom
           FILES_TO_SYNC=(
             "ci/base.yml"
+            "ci/debug.yml"
+            "ci/iq-8275-evk.yml"
+            "ci/iq-9075-evk.yml"
             "ci/linux-qcom-6.18.yml"
             "ci/linux-qcom-next.yml"
             "ci/mirror.yml"
+            "ci/performance.yml"
             "ci/qcom-distro.yml"
           )
           for file in "${FILES_TO_SYNC[@]}"; do

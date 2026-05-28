@@ -852,9 +852,13 @@ jobs:
           git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b master temp_meta_qcom
           FILES_TO_SYNC=(
             "ci/base.yml"
+            "ci/debug.yml"
+            "ci/iq-8275-evk.yml"
+            "ci/iq-9075-evk.yml"
             "ci/linux-qcom-6.18.yml"
             "ci/linux-qcom-next.yml"
             "ci/mirror.yml"
+            "ci/performance.yml"
             "ci/qcom-distro.yml"
           )
           for file in "${FILES_TO_SYNC[@]}"; do
