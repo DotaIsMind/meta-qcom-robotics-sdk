@@ -568,28 +568,35 @@ jobs:
           import os
           import sys
           from pathlib import Path
-          
+
+          # Repos whose commits go into ci/base.lock.yml (overrides format).
+          # All other repos (except excluded ones) go into ci/qcom-robotics-distro.yml.
+          BASE_LOCK_REPOS = {
+              'oe-core', 'meta-lts-mixins', 'bitbake', 'meta-arm',
+              'meta-openembedded', 'meta-virtualization', 'meta-audioreach',
+              'meta-selinux', 'meta-updater', 'meta-security', 'meta-dpdk',
+          }
+
+          # Repos that are never updated by automation.
+          EXCLUDED_REPOS = {'meta-qcom', 'meta-qcom-distro'}
+
           class BlankNullDumper(yaml.SafeDumper):
-              """YAML dumper that renders None as blank value (key: )"""
               pass
-          
+
           def represent_none_as_blank(dumper, _):
-              # Keep YAML null semantics while showing blank style.
               return dumper.represent_scalar('tag:yaml.org,2002:null', '')
-          
+
           BlankNullDumper.add_representer(type(None), represent_none_as_blank)
-          
+
           def load_yaml(file_path):
-              """Load YAML file with safe loader"""
               try:
                   with open(file_path, 'r') as f:
                       return yaml.safe_load(f)
               except Exception as e:
                   print(f"❌ Error loading {file_path}: {e}")
                   return None
-          
+
           def save_yaml(data, file_path):
-              """Save YAML file with proper formatting"""
               try:
                   with open(file_path, 'w') as f:
                       yaml.dump(
@@ -603,71 +610,91 @@ jobs:
               except Exception as e:
                   print(f"❌ Error saving {file_path}: {e}")
                   return False
-          
-          def merge_repos(target_repos, source_repos):
-              """Merge repo commits from source to target"""
+
+          def merge_repos(base_lock_data, robotics_data, source_repos):
+              """Route commits to base.lock.yml or qcom-robotics-distro.yml."""
               updated_count = 0
               updated_repos = []
-              
+
+              base_overrides = base_lock_data.setdefault('overrides', {}).setdefault('repos', {})
+              robotics_repos = robotics_data.get('repos', {})
+
               for repo_name, repo_data in source_repos.items():
-                  if repo_name in target_repos and isinstance(repo_data, dict) and repo_name != 'meta-qcom' and repo_name != 'meta-qcom-distro':
-                      if 'commit' in repo_data:
-                          old_commit = target_repos[repo_name].get('commit', 'N/A')
-                          new_commit = repo_data['commit']
-                          
-                          if old_commit != new_commit:
-                              target_repos[repo_name]['commit'] = new_commit
-                              updated_count += 1
-                              updated_repos.append({
-                                  'name': repo_name,
-                                  'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
-                                  'new': new_commit[:8]
-                              })
-                              print(f"  ✓ Updated {repo_name}: {old_commit[:8]} → {new_commit[:8]}")
-              
+                  if not isinstance(repo_data, dict) or repo_name in EXCLUDED_REPOS:
+                      continue
+                  if 'commit' not in repo_data:
+                      continue
+
+                  new_commit = repo_data['commit']
+
+                  if repo_name in BASE_LOCK_REPOS:
+                      entry = base_overrides.setdefault(repo_name, {})
+                      old_commit = entry.get('commit') or 'N/A'
+                      if old_commit != new_commit:
+                          entry['commit'] = new_commit
+                          updated_count += 1
+                          updated_repos.append({
+                              'name': repo_name,
+                              'file': 'base.lock.yml',
+                              'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
+                              'new': new_commit[:8],
+                          })
+                          print(f"  ✓ [base.lock.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
+
+                  elif repo_name in robotics_repos:
+                      old_commit = robotics_repos[repo_name].get('commit', 'N/A')
+                      if old_commit != new_commit:
+                          robotics_repos[repo_name]['commit'] = new_commit
+                          updated_count += 1
+                          updated_repos.append({
+                              'name': repo_name,
+                              'file': 'qcom-robotics-distro.yml',
+                              'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
+                              'new': new_commit[:8],
+                          })
+                          print(f"  ✓ [qcom-robotics-distro.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
+
               return updated_count, updated_repos
-          
-          # Path to the target file
-          target_file = 'ci/qcom-robotics-distro.yml'
+
+          base_lock_file = 'ci/base.lock.yml'
+          robotics_file = 'ci/qcom-robotics-distro.yml'
           artifacts_dir = 'kas-build-artifacts'
-          
+
           print("=" * 60)
           print("🔄 Starting Repository Commit Merge")
           print("=" * 60)
           print()
-          
-          # Validate directories and files
+
           if not os.path.exists(artifacts_dir):
               print(f"❌ Artifacts directory not found: {artifacts_dir}")
               print(f"   Current directory: {os.getcwd()}")
               print(f"   Contents: {os.listdir('.')}")
               sys.exit(1)
-          
-          if not os.path.exists(target_file):
-              print(f"❌ Target file not found: {target_file}")
+
+          for f in (base_lock_file, robotics_file):
+              if not os.path.exists(f):
+                  print(f"❌ Required file not found: {f}")
+                  sys.exit(1)
+
+          print(f"📖 Loading {base_lock_file}")
+          base_lock_data = load_yaml(base_lock_file)
+          if not base_lock_data:
+              print("❌ Failed to load base.lock.yml")
               sys.exit(1)
-          
-          # Load target YAML
-          print(f"📖 Loading target file: {target_file}")
-          target_data = load_yaml(target_file)
-          
-          if not target_data:
-              print("❌ Failed to load target file")
+
+          print(f"📖 Loading {robotics_file}")
+          robotics_data = load_yaml(robotics_file)
+          if not robotics_data or 'repos' not in robotics_data:
+              print("❌ Failed to load qcom-robotics-distro.yml or missing 'repos'")
               sys.exit(1)
-          
-          if 'repos' not in target_data:
-              print("❌ No 'repos' field found in target file")
-              sys.exit(1)
-          
-          print(f"   ✅ Loaded {len(target_data['repos'])} repositories from target")
+
+          print(f"   ✅ Loaded {len(robotics_data['repos'])} repositories from qcom-robotics-distro.yml")
           print()
-          
-          # Find all kas-build.yml files
+
           kas_build_files = list(Path(artifacts_dir).rglob('kas-build.yml'))
-          
+
           if not kas_build_files:
               print(f"⚠️  No kas-build.yml files found in {artifacts_dir}")
-              print(f"   Directory structure:")
               for root, dirs, files in os.walk(artifacts_dir):
                   level = root.replace(artifacts_dir, '').count(os.sep)
                   indent = ' ' * 2 * level
@@ -676,45 +703,42 @@ jobs:
                   for file in files:
                       print(f"{subindent}{file}")
               sys.exit(0)
-          
+
           print(f"📦 Found {len(kas_build_files)} kas-build.yml file(s):")
           for f in kas_build_files:
               print(f"   - {f}")
           print()
-          
+
           total_updates = 0
           all_updated_repos = []
           processed_artifacts = []
           skipped_artifacts = []
-          
-          # Process each kas-build.yml file
+
           for kas_file in kas_build_files:
               artifact_name = kas_file.parent.name
-              
-              # Check if artifact matches expected pattern
-              if (artifact_name.startswith('kas-build-qcom-distro') and artifact_name.endswith('iq-9075-evk')):
-                  
+
+              if artifact_name.startswith('kas-build-qcom-distro') and artifact_name.endswith('iq-9075-evk'):
                   print(f"🔄 Processing: {artifact_name}")
-                  
+
                   try:
                       source_data = load_yaml(kas_file)
-                      
+
                       if not source_data:
                           print(f"  ⚠️  Failed to load {kas_file}")
                           continue
-                      
+
                       if 'repos' in source_data:
                           print(f"  📚 Found {len(source_data['repos'])} repositories in source")
-                          updates, updated_repos = merge_repos(target_data['repos'], source_data['repos'])
+                          updates, updated_repos = merge_repos(base_lock_data, robotics_data, source_data['repos'])
                           total_updates += updates
                           all_updated_repos.extend(updated_repos)
                           processed_artifacts.append(artifact_name)
-                          
+
                           if updates == 0:
                               print(f"  ℹ️  No updates needed (all commits already up-to-date)")
                       else:
                           print(f"  ⚠️  No 'repos' field found in {kas_file}")
-                  
+
                   except Exception as e:
                       print(f"  ❌ Error processing {kas_file}: {e}")
                       import traceback
@@ -723,10 +747,9 @@ jobs:
               else:
                   skipped_artifacts.append(artifact_name)
                   print(f"⏭️  Skipping: {artifact_name} (doesn't match pattern)")
-              
+
               print()
-          
-          # Summary
+
           print("=" * 60)
           print("📊 Merge Summary")
           print("=" * 60)
@@ -734,35 +757,30 @@ jobs:
           print(f"Skipped artifacts: {len(skipped_artifacts)}")
           print(f"Total repository updates: {total_updates}")
           print()
-          
-          # Save updated target file
+
           if total_updates > 0:
-              saved_yaml_file = 'ci/qcom-robotics-distro.yml'
-              print(f"💾 Saving updated file: {saved_yaml_file}")
-              
-              if save_yaml(target_data, saved_yaml_file):
-                  print(f"✅ Successfully saved {total_updates} repository commit update(s)")
-                  
-                  # Write detailed summary to GitHub Actions
-                  summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
-                  if summary_file:
-                      with open(summary_file, 'a') as f:
-                          f.write("## 🔄 Repository Commit Updates\n\n")
-                          f.write(f"**Status:** ✅ Updated {total_updates} repository commits\n\n")
-                          f.write(f"**Processed Artifacts:** {len(processed_artifacts)}\n")
-                          for art in processed_artifacts:
-                              f.write(f"- `{art}`\n")
-                          f.write(f"\n**Target File:** `{saved_yaml_file}`\n\n")
-                          
-                          if all_updated_repos:
-                              f.write("### Updated Repositories\n\n")
-                              f.write("| Repository | Old Commit | New Commit |\n")
-                              f.write("|------------|------------|------------|\n")
-                              for repo in all_updated_repos:
-                                  f.write(f"| `{repo['name']}` | `{repo['old']}` | `{repo['new']}` |\n")
-              else:
-                  print("❌ Failed to save updated file")
-                  sys.exit(1)
+              for save_data, save_path in ((base_lock_data, base_lock_file), (robotics_data, robotics_file)):
+                  print(f"💾 Saving {save_path}")
+                  if not save_yaml(save_data, save_path):
+                      print(f"❌ Failed to save {save_path}")
+                      sys.exit(1)
+              print(f"✅ Successfully saved {total_updates} repository commit update(s)")
+
+              summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
+              if summary_file:
+                  with open(summary_file, 'a') as f:
+                      f.write("## 🔄 Repository Commit Updates\n\n")
+                      f.write(f"**Status:** ✅ Updated {total_updates} repository commits\n\n")
+                      f.write(f"**Processed Artifacts:** {len(processed_artifacts)}\n")
+                      for art in processed_artifacts:
+                          f.write(f"- `{art}`\n")
+                      f.write(f"\n**Target Files:** `{base_lock_file}`, `{robotics_file}`\n\n")
+                      if all_updated_repos:
+                          f.write("### Updated Repositories\n\n")
+                          f.write("| Repository | File | Old Commit | New Commit |\n")
+                          f.write("|------------|------|------------|------------|\n")
+                          for repo in all_updated_repos:
+                              f.write(f"| `{repo['name']}` | `{repo['file']}` | `{repo['old']}` | `{repo['new']}` |\n")
           else:
               print("⚠️  No updates were made (all commits already up-to-date)")
               summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
@@ -771,13 +789,12 @@ jobs:
                       f.write("## 🔄 Repository Commit Updates\n\n")
                       f.write("**Status:** ℹ️  No repository commits needed updating\n\n")
                       f.write("All repository commits are already up-to-date with the nightly build.\n")
-          
-          # Output whether updates were made
+
           output_file = os.environ.get('GITHUB_OUTPUT')
           if output_file:
               with open(output_file, 'a') as f:
                   f.write(f"has_updates={'true' if total_updates > 0 else 'false'}\n")
-          
+
           print("=" * 60)
           print("✅ Merge process completed")
           print("=" * 60)
