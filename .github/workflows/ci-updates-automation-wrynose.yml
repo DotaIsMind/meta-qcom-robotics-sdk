@@ -869,14 +869,18 @@ jobs:
           git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b wrynose temp_meta_qcom
           FILES_TO_SYNC=(
             "ci/base.yml"
-            "ci/debug.yml"
+            "ci/base.lock.yml"
             "ci/iq-8275-evk.yml"
             "ci/iq-9075-evk.yml"
-            "ci/linux-qcom-6.18.yml"
+            "ci/qcom-distro.yml"
+            "ci/qcom-distro-catchall.yml"
+            "ci/qcom-distro-kvm.yml"
+            "ci/linux-qcom-rt-6.18.yml"
             "ci/linux-qcom-next.yml"
+            "ci/linux-qcom-next-rt.yml"
             "ci/mirror.yml"
             "ci/performance.yml"
-            "ci/qcom-distro.yml"
+            "ci/debug.yml"   
           )
           for file in "${FILES_TO_SYNC[@]}"; do
             cp "temp_meta_qcom/$file" "./ci/$(basename "$file")"
