@@ -800,7 +800,7 @@ jobs:
           print("=" * 60)
 
       - name: Upload merged configuration artifact
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: qcom-robotics-distro-merged-${{ github.run_number }}
@@ -816,7 +816,7 @@ jobs:
       # and include the nightly build URL and a timestamp.
       # ------------------------------------------------------------------
       - name: Checkout Fork Repository
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         uses: actions/checkout@v4
         with:
           repository: DotaIsMind/meta-qcom-robotics-sdk  
@@ -824,13 +824,13 @@ jobs:
           fetch-depth: 0
 
       - name: Configure git for actions
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       
       - name: Sync with upstream wrynose
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         run: |
           if git remote get-url upstream > /dev/null 2>&1; then
             git remote set-url upstream https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git
@@ -840,28 +840,28 @@ jobs:
           git fetch upstream wrynose
 
       - name: Create new branch for PR
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         run: |
           RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
           BRANCH_NAME="auto-update-meta-qcom-commit-$RUN_ID"
           git checkout -B "$BRANCH_NAME" upstream/wrynose
 
       - name: Prepare PR information
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         id: pr-info
         run: |
           echo "timestamp=$(date -u)" >> $GITHUB_OUTPUT
           echo "workflow_url=${{ steps.get-workflow-run.outputs.workflow_url }}" >> $GITHUB_OUTPUT
 
       - name: Download merged configuration artifact
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         uses: actions/download-artifact@v6
         with:
           name: qcom-robotics-distro-merged-${{ github.run_number }}
           path: 'ci/'
 
       - name: Prepare Git for commit message
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
@@ -908,7 +908,7 @@ jobs:
           git push origin HEAD --force-with-lease
 
       - name: Create pull request to upstream
-        if: steps.merge-commit-id.outputs.has_updates == 'true'
+        # if: steps.merge-commit-id.outputs.has_updates == 'true'
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
