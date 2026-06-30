@@ -851,6 +851,7 @@ jobs:
           echo "📝 Updating the ci confiugration file from meta-qcom..."
           git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b master temp_meta_qcom
           FILES_TO_SYNC=(
+            "ci/base.lock.yml"
             "ci/base.yml"
             "ci/debug.yml"
             "ci/iq-8275-evk.yml"
