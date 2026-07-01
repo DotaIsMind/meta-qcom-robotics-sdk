@@ -34,13 +34,11 @@ ROS_SDK_TARGET_PACKAGES:append = "${@bb.utils.contains('DISTRO_FEATURES', 'ros2-
     python-cmake-module \
 ', '', d)}"
 
-
 TOOLCHAIN_TARGET_TASK:remove = "qirp-sdk"
 
 # Add default packages from meta-ros ros-sdk.inc
-TOOLCHAIN_HOST_TASK:append = " ${ROS_SDK_HOST_PACKAGES}"
-
-TOOLCHAIN_TARGET_TASK:append = " ${ROS_SDK_TARGET_PACKAGES}"
+TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
+TOOLCHAIN_TARGET_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_TARGET_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
 
 # kernel-devsrc's RPM auto-generated Requires:/bin/sed must be satisfied in the
 # SDK target sysroot. sed provides /bin/sed (via RPROVIDES for usrmerge compat)
