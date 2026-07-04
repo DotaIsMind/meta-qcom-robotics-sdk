@@ -610,7 +610,7 @@ jobs:
               updated_repos = []
               
               for repo_name, repo_data in source_repos.items():
-                  if repo_name in target_repos and isinstance(repo_data, dict):
+                  if (repo_name == "meta-qcom" or repo_name == "meta-qcom-distro") and isinstance(repo_data, dict):
                       if 'commit' in repo_data:
                           old_commit = target_repos[repo_name].get('commit', 'N/A')
                           new_commit = repo_data['commit']
