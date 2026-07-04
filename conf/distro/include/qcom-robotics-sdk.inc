@@ -44,3 +44,6 @@ TOOLCHAIN_TARGET_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_TARGET_PACKAGES') o
 # SDK target sysroot. sed provides /bin/sed (via RPROVIDES for usrmerge compat)
 # but is not in the image. Add it explicitly to the SDK target package set.
 TOOLCHAIN_TARGET_TASK:append = " sed"
+
+# Add do_collect_rdepends task to target dependency chain to avoid eSDK inner build error
+SDK_RECRDEP_TASKS:append = " do_collect_rdepends"

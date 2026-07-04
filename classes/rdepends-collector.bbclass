@@ -29,6 +29,7 @@ do_collect_rdepends[sstate-inputdirs] = "${ROBOTICS_PACKAGEGROUP_LIST_STAGING_DI
 do_collect_rdepends[sstate-outputdirs] = "${ROBOTICS_PACKAGEGROUP_LIST_DIR}"
 # ensure input/output path exist
 do_collect_rdepends[dirs] = "${ROBOTICS_PACKAGEGROUP_LIST_STAGING_DIR} ${ROBOTICS_PACKAGEGROUP_LIST_DIR}"
+
 # clean staging path before run task
 do_collect_rdepends[cleandirs] = "${ROBOTICS_PACKAGEGROUP_LIST_STAGING_DIR}"
 # sperate different MACHINE_ARCH sstate cache
@@ -36,7 +37,10 @@ do_collect_rdepends[stamp-extra-info] = "${MACHINE_ARCH}"
 
 # Add task: collect RDEPENDS after packagegroup build
 addtask do_collect_rdepends after do_package_write before do_build
-do_collect_rdepends[vardeps] = "RDEPENDS:${PN}"
+
+# Add a variable for the mandatory SDK package and include it in vardeps
+ROBOTICS_SDK_PACKAGE ?= "qirp-sdk"
+do_collect_rdepends[vardeps] = "RDEPENDS:${PN} ROBOTICS_SDK_PACKAGE"
 
 # setscene function required by BitBake to recognise do_collect_rdepends as a
 # sstate-restorable task. Without this, runqueue.py skips the task from the
@@ -81,7 +85,8 @@ python do_collect_rdepends() {
             if pkg_clean:
                 f.write("{}\n".format(pkg_clean))
         # qirp-sdk is a standalone package that must be present in all images.
-        f.write("{}\n".format("qirp-sdk"))
+        sdk_package = d.getVar("ROBOTICS_SDK_PACKAGE") or "qirp-sdk"
+        f.write("{}\n".format(sdk_package))
 
     package_count = len(rdepends.split())
     bb.note("Wrote {} packages to {}".format(package_count, list_file))
