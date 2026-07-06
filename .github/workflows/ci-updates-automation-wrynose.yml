@@ -819,7 +819,7 @@ jobs:
         # if: steps.merge-commit-id.outputs.has_updates == 'true'
         uses: actions/checkout@v4
         with:
-          repository: DotaIsMind/meta-qcom-robotics-sdk  
+          repository: TengFan-QC/meta-qcom-robotics-sdk  
           token: ${{ secrets.PAT_TOKEN }}  # Use PAT_TOKEN for fork access
           fetch-depth: 0
 
@@ -918,7 +918,7 @@ jobs:
           
           PR_URL=$(gh pr create \
             --repo qualcomm-linux/meta-qcom-robotics-sdk \
-            --head DotaIsMind:$BRANCH_NAME \
+            --head TengFan-QC:$BRANCH_NAME \
             --base wrynose \
             --title "ci(automation): update the commit id from meta-qcom (wrynose): ${{ steps.get-workflow-run.outputs.run_id }}" \
             --body "$(cat << 'EOF'
@@ -933,8 +933,8 @@ jobs:
           EOF
           )" \
             --label automation \
-            --assignee DotaIsMind \
-            --reviewer DotaIsMind)
+            --assignee TengFan-QC \
+            --reviewer TengFan-QC)
           
           echo "✅ PR created: $PR_URL"
           
