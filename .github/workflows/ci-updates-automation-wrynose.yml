@@ -578,7 +578,7 @@ jobs:
           }
 
           # Repos that are never updated by automation.
-          EXCLUDED_REPOS = {'meta-qcom', 'meta-qcom-distro'}
+          # EXCLUDED_REPOS = {'meta-qcom', 'meta-qcom-distro'}
 
           class BlankNullDumper(yaml.SafeDumper):
               pass
