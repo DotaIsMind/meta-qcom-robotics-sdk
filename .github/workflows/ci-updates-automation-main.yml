@@ -849,7 +849,17 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           echo "📝 Updating the ci confiugration file from meta-qcom..."
-          git clone --depth 1 https://github.com/qualcomm-linux/meta-qcom.git -b master temp_meta_qcom
+          # Use the exact meta-qcom commit that the nightly build was based on
+          # (recorded in ci/qcom-robotics-distro.yml by the merge-commit-id step),
+          # not the latest master HEAD, otherwise the synced ci/*.yml files could
+          # be incompatible with the nightly build's meta-qcom code base.
+          META_QCOM_COMMIT=$(python3 -c "import yaml; print(yaml.safe_load(open('ci/qcom-robotics-distro.yml'))['repos']['meta-qcom']['commit'])")
+          echo "📌 meta-qcom commit from nightly build: $META_QCOM_COMMIT"
+          mkdir temp_meta_qcom
+          git -C temp_meta_qcom init -q
+          git -C temp_meta_qcom remote add origin https://github.com/qualcomm-linux/meta-qcom.git
+          git -C temp_meta_qcom fetch --depth 1 origin "$META_QCOM_COMMIT"
+          git -C temp_meta_qcom checkout -q FETCH_HEAD
           FILES_TO_SYNC=(
             "ci/base.lock.yml"
             "ci/base.yml"
