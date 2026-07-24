@@ -608,22 +608,29 @@ jobs:
               """Merge repo commits from source to target"""
               updated_count = 0
               updated_repos = []
+              robotics_repos = target_repos.get('repos', {})
               
               for repo_name, repo_data in source_repos.items():
-                  if (repo_name == "meta-qcom" or repo_name == "meta-qcom-distro") and isinstance(repo_data, dict):
-                      if 'commit' in repo_data:
-                          old_commit = target_repos[repo_name].get('commit', 'N/A')
-                          new_commit = repo_data['commit']
-                          
-                          if old_commit != new_commit:
-                              target_repos[repo_name]['commit'] = new_commit
-                              updated_count += 1
-                              updated_repos.append({
-                                  'name': repo_name,
-                                  'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
-                                  'new': new_commit[:8]
-                              })
-                              print(f"  ✓ Updated {repo_name}: {old_commit[:8]} → {new_commit[:8]}")
+                  if not isinstance(repo_data, dict):
+                      continue
+                  if 'commit' not in repo_data:
+                      continue
+                  if repo_name == "meta-qcom" or repo_name == "meta-qcom-distro" or (repo_name in robotics_repos):
+                    new_commit = repo_data['commit']
+
+                    entry = robotics_repos.setdefault(repo_name, {})
+                    old_commit = entry.get('commit', 'N/A')
+                    if old_commit != new_commit:
+                        entry['commit'] = new_commit
+                        updated_count += 1
+                        updated_repos.append({
+                            'name': repo_name,
+                            'file': 'qcom-robotics-distro.yml',
+                            'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
+                            'new': new_commit[:8],
+                        })
+                        print(f"  ✓ [qcom-robotics-distro.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
+
               
               return updated_count, updated_repos
           
@@ -705,7 +712,7 @@ jobs:
                       
                       if 'repos' in source_data:
                           print(f"  📚 Found {len(source_data['repos'])} repositories in source")
-                          updates, updated_repos = merge_repos(target_data['repos'], source_data['repos'])
+                          updates, updated_repos = merge_repos(target_data, source_data)
                           total_updates += updates
                           all_updated_repos.extend(updated_repos)
                           processed_artifacts.append(artifact_name)
