@@ -569,17 +569,6 @@ jobs:
           import sys
           from pathlib import Path
 
-          # Repos whose commits go into ci/base.lock.yml (overrides format).
-          # All other repos (except excluded ones) go into ci/qcom-robotics-distro.yml.
-          BASE_LOCK_REPOS = {
-              'oe-core', 'meta-lts-mixins', 'bitbake', 'meta-arm',
-              'meta-openembedded', 'meta-virtualization', 'meta-audioreach',
-              'meta-selinux', 'meta-updater', 'meta-security', 'meta-dpdk',
-          }
-
-          # Repos that are never updated by automation.
-          # EXCLUDED_REPOS = {'meta-qcom', 'meta-qcom-distro'}
-
           class BlankNullDumper(yaml.SafeDumper):
               pass
 
@@ -611,52 +600,38 @@ jobs:
                   print(f"❌ Error saving {file_path}: {e}")
                   return False
 
-          def merge_repos(base_lock_data, robotics_data, source_repos):
-              """Route commits to base.lock.yml or qcom-robotics-distro.yml."""
+          def merge_repos(robotics_data, source_repos):
+              """Update commits in qcom-robotics-distro.yml. Repos in
+              BASE_LOCK_REPOS are skipped here; their commits are synced via
+              the ci/base.lock.yml copy from meta-qcom instead."""
               updated_count = 0
               updated_repos = []
 
-              base_overrides = base_lock_data.setdefault('overrides', {}).setdefault('repos', {})
               robotics_repos = robotics_data.get('repos', {})
 
               for repo_name, repo_data in source_repos.items():
-                  if not isinstance(repo_data, dict) or repo_name in EXCLUDED_REPOS:
+                  if not isinstance(repo_data, dict):
                       continue
                   if 'commit' not in repo_data:
                       continue
+                  if repo_name == "meta-qcom" or repo_name == "meta-qcom-distro" or (repo_name in robotics_repos):
+                    new_commit = repo_data['commit']
 
-                  new_commit = repo_data['commit']
-
-                  if repo_name in BASE_LOCK_REPOS:
-                      entry = base_overrides.setdefault(repo_name, {})
-                      old_commit = entry.get('commit') or 'N/A'
-                      if old_commit != new_commit:
-                          entry['commit'] = new_commit
-                          updated_count += 1
-                          updated_repos.append({
-                              'name': repo_name,
-                              'file': 'base.lock.yml',
-                              'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
-                              'new': new_commit[:8],
-                          })
-                          print(f"  ✓ [base.lock.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
-
-                  elif repo_name in robotics_repos:
-                      old_commit = robotics_repos[repo_name].get('commit', 'N/A')
-                      if old_commit != new_commit:
-                          robotics_repos[repo_name]['commit'] = new_commit
-                          updated_count += 1
-                          updated_repos.append({
-                              'name': repo_name,
-                              'file': 'qcom-robotics-distro.yml',
-                              'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
-                              'new': new_commit[:8],
-                          })
-                          print(f"  ✓ [qcom-robotics-distro.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
+                    entry = robotics_repos.setdefault(repo_name, {})
+                    old_commit = entry.get('commit', 'N/A')
+                    if old_commit != new_commit:
+                        entry['commit'] = new_commit
+                        updated_count += 1
+                        updated_repos.append({
+                            'name': repo_name,
+                            'file': 'qcom-robotics-distro.yml',
+                            'old': old_commit[:8] if old_commit != 'N/A' else 'N/A',
+                            'new': new_commit[:8],
+                        })
+                        print(f"  ✓ [qcom-robotics-distro.yml] {repo_name}: {old_commit[:8] if old_commit != 'N/A' else 'N/A'} → {new_commit[:8]}")
 
               return updated_count, updated_repos
 
-          base_lock_file = 'ci/base.lock.yml'
           robotics_file = 'ci/qcom-robotics-distro.yml'
           artifacts_dir = 'kas-build-artifacts'
 
@@ -671,15 +646,8 @@ jobs:
               print(f"   Contents: {os.listdir('.')}")
               sys.exit(1)
 
-          for f in (base_lock_file, robotics_file):
-              if not os.path.exists(f):
-                  print(f"❌ Required file not found: {f}")
-                  sys.exit(1)
-
-          print(f"📖 Loading {base_lock_file}")
-          base_lock_data = load_yaml(base_lock_file)
-          if not base_lock_data:
-              print("❌ Failed to load base.lock.yml")
+          if not os.path.exists(robotics_file):
+              print(f"❌ Required file not found: {robotics_file}")
               sys.exit(1)
 
           print(f"📖 Loading {robotics_file}")
@@ -729,7 +697,7 @@ jobs:
 
                       if 'repos' in source_data:
                           print(f"  📚 Found {len(source_data['repos'])} repositories in source")
-                          updates, updated_repos = merge_repos(base_lock_data, robotics_data, source_data['repos'])
+                          updates, updated_repos = merge_repos(robotics_data, source_data['repos'])
                           total_updates += updates
                           all_updated_repos.extend(updated_repos)
                           processed_artifacts.append(artifact_name)
@@ -759,11 +727,10 @@ jobs:
           print()
 
           if total_updates > 0:
-              for save_data, save_path in ((base_lock_data, base_lock_file), (robotics_data, robotics_file)):
-                  print(f"💾 Saving {save_path}")
-                  if not save_yaml(save_data, save_path):
-                      print(f"❌ Failed to save {save_path}")
-                      sys.exit(1)
+              print(f"💾 Saving {robotics_file}")
+              if not save_yaml(robotics_data, robotics_file):
+                  print(f"❌ Failed to save {robotics_file}")
+                  sys.exit(1)
               print(f"✅ Successfully saved {total_updates} repository commit update(s)")
 
               summary_file = os.environ.get('GITHUB_STEP_SUMMARY')
@@ -774,7 +741,7 @@ jobs:
                       f.write(f"**Processed Artifacts:** {len(processed_artifacts)}\n")
                       for art in processed_artifacts:
                           f.write(f"- `{art}`\n")
-                      f.write(f"\n**Target Files:** `{base_lock_file}`, `{robotics_file}`\n\n")
+                      f.write(f"\n**Target File:** `{robotics_file}`\n\n")
                       if all_updated_repos:
                           f.write("### Updated Repositories\n\n")
                           f.write("| Repository | File | Old Commit | New Commit |\n")
