@@ -712,7 +712,7 @@ jobs:
                       
                       if 'repos' in source_data:
                           print(f"  📚 Found {len(source_data['repos'])} repositories in source")
-                          updates, updated_repos = merge_repos(target_data, source_data)
+                          updates, updated_repos = merge_repos(target_data, source_data['repos']))
                           total_updates += updates
                           all_updated_repos.extend(updated_repos)
                           processed_artifacts.append(artifact_name)
