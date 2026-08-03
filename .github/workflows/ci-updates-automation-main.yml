@@ -5,7 +5,7 @@ on:
     # NOTE - changes to the cron spec should be pushed by https://github.com/quic-yocto-ci
     # so that build notification emails will be sent out properly.
     # At 22:00 UTC every Sunday - picked a random "minute" as top of hour can be busy in github
-    - cron: "0 22 * * 0"
+    - cron: "0 19 * * 0"
 
   workflow_dispatch:
     inputs:
@@ -893,10 +893,10 @@ jobs:
           
           # Git commit and push changes
           # Unstage workflow file if it was accidentally added, without removing it from index/history
-          git restore --staged .github/workflows/ci-updates-automation.yml || true
-          git commit -m "ci(automation): update the commit id from meta-qcom (master)" \
+          git restore --staged .github/workflows/ci-updates-automation-main.yml || true
+          git commit -m "ci(automation): update kas config from meta-qcom (master)" \
             -m "" \
-            -m "Auto-update repository commits from nightly build" \
+            -m "Auto-update kas config from meta-qcom nightly build" \
             -m "" \
             -m "meta-qcom nightly build: ${{ steps.get-workflow-run.outputs.workflow_url }}" \
             -m "Actions run url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
@@ -909,7 +909,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          BRANCH_NAME="auto-update-meta-qcom-commit-${{ steps.get-workflow-run.outputs.run_id }}"
+          BRANCH_NAME="auto-update-meta-qcom-kas-config-${{ steps.get-workflow-run.outputs.run_id }}"
           
           echo "📤 Creating PR from fork branch to upstream main..."
           
@@ -917,11 +917,11 @@ jobs:
             --repo qualcomm-linux/meta-qcom-robotics-sdk \
             --head TengFan-QC:$BRANCH_NAME \
             --base main \
-            --title "ci(automation): update the commit id from meta-qcom (master): ${{ steps.get-workflow-run.outputs.run_id }}" \
+            --title "ci(automation): update kas config from meta-qcom (master): ${{ steps.get-workflow-run.outputs.run_id }}" \
             --body "$(cat << 'EOF'
-          ## Auto-update from meta-qcom Nightly Build (master)
+          ## Auto-update kas config from meta-qcom nightly build (master)
 
-          This pull request automatically updates the repository commits from the latest meta-qcom master nightly build.
+          This pull request automatically updates kas config from the latest meta-qcom master nightly build.
 
           **Build Details:**
           - meta-qcom nightly build url: ${{ steps.get-workflow-run.outputs.workflow_url }}
