@@ -16,6 +16,7 @@ inherit rdepends-collector
 
 # Qualcomm proprietary robotics binaries
 QUALCOMM_ROBOTICS_PROPRIETARY = " \
+  ${@bb.utils.contains_any('BBFILE_COLLECTIONS', 'qti-robotics-prop', ' vio ', '', d)} \
 "
 
 RDEPENDS:${PN} = " \

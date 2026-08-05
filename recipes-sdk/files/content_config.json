@@ -67,6 +67,10 @@
         {
             "name": "sample-face-detection",
             "to": "qirp-samples/ai_vision"
+        },
+        {
+            "name": "vio",
+            "to": "qirp-samples/robotics"
         }
       ],
       "scripts": [
