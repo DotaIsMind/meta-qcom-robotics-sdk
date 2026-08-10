@@ -873,7 +873,7 @@ jobs:
           
           # Git commit and push changes
           # Unstage workflow file if it was accidentally added, without removing it from index/history
-          git restore --staged .github/workflows/ci-updates-automation-wrynose.yml || true
+          git restore --staged .github/workflows/ci-updates-automation.yml || true
           git commit -m "ci(automation): update kas config from meta-qcom (wrynose)" \
             -m "" \
             -m "Auto-update kas config from nightly build" \
