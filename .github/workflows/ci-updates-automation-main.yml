@@ -833,7 +833,7 @@ jobs:
         if: steps.merge-commit-id.outputs.has_updates == 'true'
         run: |
           RUN_ID="${{ steps.get-workflow-run.outputs.run_id }}"
-          BRANCH_NAME="auto-update-meta-qcom-commit-$RUN_ID"
+          BRANCH_NAME="auto-update-meta-qcom-kas-config-$RUN_ID"
           git checkout -B "$BRANCH_NAME" upstream/main
 
       - name: Prepare PR information
