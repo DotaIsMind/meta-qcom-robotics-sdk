@@ -42,6 +42,13 @@ TOOLCHAIN_TARGET_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_TARGET_PACKAGES') o
 
 TOOLCHAIN_HOST_TASK:append = "${@(' ' + (d.getVar('ROS_SDK_HOST_PACKAGES') or '')) if d.getVar('PN') != 'buildtools-tarball' else ''}"
 
+TOOLCHAIN_TARGET_TASK:append = "${@' \
+    sed \
+    fmt-staticdev \
+    octomap-staticdev \
+    osqp-vendor-staticdev \
+' if d.getVar('PN') != 'buildtools-tarball' else ''}"
+
 # esdk fix for populate_sdk_ext:
 # 1. BB_SETSCENE_ENFORCE_IGNORE_TASKS: The inner eSDK build uses %:* to allow
 #    all BUILD TARGET tasks to run from scratch, but this expands only to the
