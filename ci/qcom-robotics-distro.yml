@@ -10,11 +10,11 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: a1978c6c3e4f6e5fd0cd90dfbea3f130210818f8
+    commit: 086b40abd4db0463e1bccb0802c1544f9c5ec988
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
-    commit: 5a9bc8bf794cd857ad1986d4c73341ad98b42c48
+    commit: 54961938da5855b4ae6809c0eb4ddbdfb6b21f4f
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -23,7 +23,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 31edc0b82a3dc7b1dd0338da4a8d0d8f5a1dc138
+    commit: d51c6e87a10c7c75a692ca86b71af9a818026ecb
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
@@ -94,6 +94,5 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
     '
-
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
