@@ -10,7 +10,7 @@ repos:
     branch: main
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: 36d23fedc4c84f2dee486857fc917f866506d047
+    commit: d2dda53767a99880287691c2d8ea1e1dd6f81ae2
   meta-qcom-distro:
     url: https://github.com/qualcomm-linux/meta-qcom-distro
     branch: main
@@ -23,7 +23,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
-    commit: 62d2381bdee1cebb5924f8594f8a9994083d4f7d
+    commit: f810998ac90f7a3e20e26555f39d754b16ce8b69
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: master
