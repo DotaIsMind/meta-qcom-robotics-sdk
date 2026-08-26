@@ -16,7 +16,7 @@ SRC_URI = "git://github.com/quic-qrb-ros/qrb_ros_video.git;protocol=https;branch
            file://0001-fix-decoder-defer-output-port-setup-until-source-res.patch;striplevel=2 \
           "
 
-SRCREV = "3b94a5f4ec6cc498fe4161d010f44f5393030173"
+SRCREV = "bc8382c11a0022a385a41518ea1a431415b78f7d"
 S = "${UNPACKDIR}/${BP}/qrb_video_v4l2_lib"
 
 EXTRA_OECMAKE:append = " -DBUILD_TESTING=OFF"
