@@ -47,3 +47,7 @@ TOOLCHAIN_TARGET_TASK:append = " sed"
 
 # Add do_collect_rdepends task to target dependency chain to avoid eSDK inner build error
 SDK_RECRDEP_TASKS:append = " do_collect_rdepends"
+
+# protobuf-camx recipe was removed from meta-qcom; replace with nativesdk-protobuf-compiler
+TOOLCHAIN_HOST_TASK:remove = "nativesdk-protobuf-camx-compiler"
+TOOLCHAIN_HOST_TASK:append = " nativesdk-protobuf-compiler"
