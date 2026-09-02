@@ -63,17 +63,25 @@ runs:
 
     - name: Dump kas-build yaml
       shell: bash
+      env:
+        MACHINE: ${{ inputs.machine }}
+        DISTRO_YAML: ${{ inputs.distro_yaml }}
+        KERNEL_YAML: ${{ inputs.kernel_yaml }}
       run: |
         mkdir $KAS_WORK_DIR
         $KAS_CONTAINER dump --resolve-env --resolve-local --resolve-refs \
-          ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} > kas-build.yml
+          ci/mirror.yml:ci/${MACHINE}.yml${DISTRO_YAML}${KERNEL_YAML} > kas-build.yml
         echo "==== kas-build.yml contents: ===="
         cat kas-build.yml
 
     - name: Kas build images
       shell: bash
+      env:
+        MACHINE: ${{ inputs.machine }}
+        DISTRO_YAML: ${{ inputs.distro_yaml }}
+        KERNEL_YAML: ${{ inputs.kernel_yaml }}
       run: |
-        $KAS_CONTAINER shell ci/mirror.yml:ci/${{ inputs.machine }}.yml${{ inputs.distro_yaml }}${{ inputs.kernel_yaml }} --command "\
+        $KAS_CONTAINER shell ci/mirror.yml:ci/${MACHINE}.yml${DISTRO_YAML}${KERNEL_YAML} --command "\
         sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran && \
         bitbake -c build qcom-robotics-image && \
         bitbake -c generate_qirp_sdk qcom-robotics-image && \
@@ -97,39 +105,47 @@ runs:
 
     - name: Stage build artifacts for publishing
       shell: bash
+      env:
+        MACHINE: ${{ inputs.machine }}
+        DISTRO_NAME: ${{ inputs.distro_name }}
+        KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
       run: |
         # The upload-private-artifact-action runs from a container that
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
         echo "Current workdir: $(pwd)"
-        if [ -d ../kas/build/tmp/deploy/images/${{inputs.machine}} ]; then
+        if [ -d "../kas/build/tmp/deploy/images/${MACHINE}" ]; then
           echo "Build image files: "
-          ls ../kas/build/tmp/deploy/images/${{inputs.machine}}
-          deploy_dir=../kas/build/tmp/deploy/images/${{inputs.machine}}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
-          mkdir -p $uploads_dir
-          find $deploy_dir/ -maxdepth 1 -type f -exec cp {} $uploads_dir/ \;
-          find $deploy_dir/ -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} $uploads_dir/ \;
-          cp buildchart.svg kas-build.yml $uploads_dir/
+          ls "../kas/build/tmp/deploy/images/${MACHINE}"
+          deploy_dir="../kas/build/tmp/deploy/images/${MACHINE}"
+          uploads_dir="./uploads/${DISTRO_NAME}${KERNEL_DIRNAME}/${MACHINE}"
+          mkdir -p "$uploads_dir"
+          find "$deploy_dir/" -maxdepth 1 -type f -exec cp {} "$uploads_dir/" \;
+          find "$deploy_dir/" -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} "$uploads_dir/" \;
+          cp buildchart.svg kas-build.yml "$uploads_dir/"
         else
           echo "WARNING: No build image files found!"
         fi
     
     - name: Stage qirp-sdk artifacts for publishing
       shell: bash
+      env:
+        MACHINE: ${{ inputs.machine }}
+        DISTRO_NAME: ${{ inputs.distro_name }}
+        KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
       run: |
         echo "Current workdir: $(pwd)"
-        if [ -d ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }} ]; then
+        if [ -d "../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}" ]; then
           echo "QIRP-SDK files: "
-          ls ../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
-          sdk_dir=../kas/build/tmp/deploy/qirpsdk_artifacts/${{ inputs.machine }}
-          uploads_dir=./uploads/${{ inputs.distro_name }}${{ inputs.kernel_dirname }}/${{ inputs.machine }}
-          mkdir -p $uploads_dir
+          ls "../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}"
+          sdk_dir="../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}"
+          uploads_dir="./uploads/${DISTRO_NAME}${KERNEL_DIRNAME}/${MACHINE}"
+          mkdir -p "$uploads_dir"
           # Match every SDK produced in this workspace: the open-source image
           # deploys qirp-sdk_<ver>.tar.gz, the proprietary one
           # qirp-sdk-proprietary_<ver>.tar.gz. xargs -r keeps tar from being run
           # with no operands (it exits non-zero on an empty archive).
-          find $sdk_dir/ -maxdepth 1 -type f -name "qirp-sdk*_*.tar.gz" -printf "%f\n" | xargs -r tar -czf $uploads_dir/qirp_sdk.tar.gz -C $sdk_dir
+          find "$sdk_dir/" -maxdepth 1 -type f -name "qirp-sdk*_*.tar.gz" -printf "%f\n" | xargs -r tar -czf "$uploads_dir/qirp_sdk.tar.gz" -C "$sdk_dir"
         else
           echo "WARNING: No QIRP-SDK files found!"
         fi
@@ -145,16 +161,16 @@ runs:
     - name: "Print output"
       shell: bash
       id: print-output
-      run: |
-        KERNEL_DIRNAME="${{ inputs.kernel_dirname }}"
-        BUILDNAME="${{ inputs.machine }}_${{ inputs.distro_name }}${KERNEL_DIRNAME}"
-        FILENAME="build-url_${BUILDNAME}"
-        echo "${{ steps.upload_s3_artifacts.outputs.url }}" > "${FILENAME}"
-        echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
       env:
         INPUTS_KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
         INPUTS_MACHINE: ${{ inputs.machine }}
         INPUTS_DISTRO_NAME: ${{ inputs.distro_name }}
+        UPLOAD_URL: ${{ steps.upload_s3_artifacts.outputs.url }}
+      run: |
+        BUILDNAME="${INPUTS_MACHINE}_${INPUTS_DISTRO_NAME}${INPUTS_KERNEL_DIRNAME}"
+        FILENAME="build-url_${BUILDNAME}"
+        echo "${UPLOAD_URL}" > "${FILENAME}"
+        echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
         
     - name: Upload build URL
       uses: actions/upload-artifact@v6
