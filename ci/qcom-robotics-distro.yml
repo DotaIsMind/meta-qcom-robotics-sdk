@@ -100,5 +100,8 @@ local_conf_header:
     PREFERRED_VERSION_libcamera = "1:0.6.0"
 
     '
+  tmpdir: 'TMPDIR = "${TOPDIR}/tmp"
+
+    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image

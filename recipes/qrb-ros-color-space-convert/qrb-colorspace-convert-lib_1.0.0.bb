@@ -43,7 +43,9 @@ SRCREV = "e8af86baa9e55f0c196164bd5f0a574e134a0965"
 S = "${UNPACKDIR}/${PN}-${PV}/qrb_colorspace_convert_lib"
 
 do_configure:prepend() {
-    # Replace GLESv2 with Adreno version in CMakeLists.txt
-    sed -i 's|GLESv2|${STAGING_LIBDIR}/libGLESv2_adreno.so.2|g' ${S}/CMakeLists.txt
-    sed -i 's|EGL|${STAGING_LIBDIR}/libEGL_adreno.so.1|g' ${S}/CMakeLists.txt
+    # Replace the plain EGL/GLESv2 library names with the Adreno-specific
+    # full paths. Use word-boundary anchors to avoid re-expanding an already
+    # expanded path if cmake re-runs the configure step.
+    sed -i 's|\bGLESv2\b|${STAGING_LIBDIR}/libGLESv2_adreno.so.2|g' ${S}/CMakeLists.txt
+    sed -i 's|\bEGL\b|${STAGING_LIBDIR}/libEGL_adreno.so.1|g' ${S}/CMakeLists.txt
 }
