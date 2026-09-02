@@ -44,17 +44,17 @@ runs:
     - name: Setup build variables and sstate-cache
       shell: bash
       env:
-        CACHE_DIR: ${{ inputs.cache_dir }}
-        USE_SSTATE: ${{ inputs.use_sstate }}
+        INPUTS_CACHE_DIR: ${{ inputs.cache_dir }}
+        INPUTS_USE_SSTATE: ${{ inputs.use_sstate }}
       run: |
         # use a monthly sstate cache folder
-        echo "DL_DIR=${CACHE_DIR}/downloads" >> $GITHUB_ENV
+        echo "DL_DIR=${INPUTS_CACHE_DIR}/downloads" >> $GITHUB_ENV
 
-        if [ "$USE_SSTATE" = "false" ]; then
+        if [ "$INPUTS_USE_SSTATE" = "false" ]; then
           echo "Not using SSTATE cache (full rebuild)."
         else
           echo "Using SSTATE cache..."
-          echo "SSTATE_DIR=${CACHE_DIR}/sstate-cache-$(date '+%Y-%m')" >> $GITHUB_ENV
+          echo "SSTATE_DIR=${INPUTS_CACHE_DIR}/sstate-cache-$(date '+%Y-%m')" >> $GITHUB_ENV
         fi
 
         echo "KAS_WORK_DIR=$PWD/../kas" >> $GITHUB_ENV
@@ -64,33 +64,33 @@ runs:
     - name: Dump kas-build yaml
       shell: bash
       env:
-        MACHINE: ${{ inputs.machine }}
-        DISTRO_YAML: ${{ inputs.distro_yaml }}
-        KERNEL_YAML: ${{ inputs.kernel_yaml }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+        INPUTS_DISTRO_YAML: ${{ inputs.distro_yaml }}
+        INPUTS_KERNEL_YAML: ${{ inputs.kernel_yaml }}
       run: |
         mkdir $KAS_WORK_DIR
         $KAS_CONTAINER dump --resolve-env --resolve-local --resolve-refs \
-          ci/mirror.yml:ci/${MACHINE}.yml${DISTRO_YAML}${KERNEL_YAML} > kas-build.yml
+          ci/mirror.yml:ci/${INPUTS_MACHINE}.yml${INPUTS_DISTRO_YAML}${INPUTS_KERNEL_YAML} > kas-build.yml
         echo "==== kas-build.yml contents: ===="
         cat kas-build.yml
 
     - name: Kas build images
       shell: bash
       env:
-        MACHINE: ${{ inputs.machine }}
-        DISTRO_YAML: ${{ inputs.distro_yaml }}
-        KERNEL_YAML: ${{ inputs.kernel_yaml }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+        INPUTS_DISTRO_YAML: ${{ inputs.distro_yaml }}
+        INPUTS_KERNEL_YAML: ${{ inputs.kernel_yaml }}
       run: |
-        $KAS_CONTAINER shell ci/mirror.yml:ci/${MACHINE}.yml${DISTRO_YAML}${KERNEL_YAML} --command "\
+        $KAS_CONTAINER shell ci/mirror.yml:ci/${INPUTS_MACHINE}.yml${INPUTS_DISTRO_YAML}${INPUTS_KERNEL_YAML} --command "\
         sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends gfortran && \
         bitbake -c build qcom-robotics-image && \
         bitbake -c generate_qirp_sdk qcom-robotics-image && \
         bitbake -c build qcom-robotics-proprietary-image && \
         bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image "
-        
+
         ci/kas-container-shell-helper.sh ci/yocto-pybootchartgui.sh
         mv $KAS_WORK_DIR/build/buildchart.svg .
-       
+
     - uses: actions/upload-artifact@v6
       with:
         name: buildchart-${{ inputs.distro_name }}-${{ inputs.kernel_dirname }}-${{ inputs.machine }}
@@ -106,19 +106,19 @@ runs:
     - name: Stage build artifacts for publishing
       shell: bash
       env:
-        MACHINE: ${{ inputs.machine }}
-        DISTRO_NAME: ${{ inputs.distro_name }}
-        KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+        INPUTS_DISTRO_NAME: ${{ inputs.distro_name }}
+        INPUTS_KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
       run: |
         # The upload-private-artifact-action runs from a container that
         # expects file to be relative to our PWD. deploy_dir is outside
         # that, so we move things around:
         echo "Current workdir: $(pwd)"
-        if [ -d "../kas/build/tmp/deploy/images/${MACHINE}" ]; then
+        if [ -d "../kas/build/tmp/deploy/images/${INPUTS_MACHINE}" ]; then
           echo "Build image files: "
-          ls "../kas/build/tmp/deploy/images/${MACHINE}"
-          deploy_dir="../kas/build/tmp/deploy/images/${MACHINE}"
-          uploads_dir="./uploads/${DISTRO_NAME}${KERNEL_DIRNAME}/${MACHINE}"
+          ls "../kas/build/tmp/deploy/images/${INPUTS_MACHINE}"
+          deploy_dir="../kas/build/tmp/deploy/images/${INPUTS_MACHINE}"
+          uploads_dir="./uploads/${INPUTS_DISTRO_NAME}${INPUTS_KERNEL_DIRNAME}/${INPUTS_MACHINE}"
           mkdir -p "$uploads_dir"
           find "$deploy_dir/" -maxdepth 1 -type f -exec cp {} "$uploads_dir/" \;
           find "$deploy_dir/" -maxdepth 1 -type l \( -name boot-*.img -o -name *.rootfs.ext4.gz -o -name *.rootfs.qcomflash.tar.gz \) -exec cp -d {} "$uploads_dir/" \;
@@ -126,20 +126,20 @@ runs:
         else
           echo "WARNING: No build image files found!"
         fi
-    
+
     - name: Stage qirp-sdk artifacts for publishing
       shell: bash
       env:
-        MACHINE: ${{ inputs.machine }}
-        DISTRO_NAME: ${{ inputs.distro_name }}
-        KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
+        INPUTS_MACHINE: ${{ inputs.machine }}
+        INPUTS_DISTRO_NAME: ${{ inputs.distro_name }}
+        INPUTS_KERNEL_DIRNAME: ${{ inputs.kernel_dirname }}
       run: |
         echo "Current workdir: $(pwd)"
-        if [ -d "../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}" ]; then
+        if [ -d "../kas/build/tmp/deploy/qirpsdk_artifacts/${INPUTS_MACHINE}" ]; then
           echo "QIRP-SDK files: "
-          ls "../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}"
-          sdk_dir="../kas/build/tmp/deploy/qirpsdk_artifacts/${MACHINE}"
-          uploads_dir="./uploads/${DISTRO_NAME}${KERNEL_DIRNAME}/${MACHINE}"
+          ls "../kas/build/tmp/deploy/qirpsdk_artifacts/${INPUTS_MACHINE}"
+          sdk_dir="../kas/build/tmp/deploy/qirpsdk_artifacts/${INPUTS_MACHINE}"
+          uploads_dir="./uploads/${INPUTS_DISTRO_NAME}${INPUTS_KERNEL_DIRNAME}/${INPUTS_MACHINE}"
           mkdir -p "$uploads_dir"
           # Match every SDK produced in this workspace: the open-source image
           # deploys qirp-sdk_<ver>.tar.gz, the proprietary one
@@ -171,7 +171,7 @@ runs:
         FILENAME="build-url_${BUILDNAME}"
         echo "${UPLOAD_URL}" > "${FILENAME}"
         echo "filename=${FILENAME}" >> $GITHUB_OUTPUT
-        
+
     - name: Upload build URL
       uses: actions/upload-artifact@v6
       with:
