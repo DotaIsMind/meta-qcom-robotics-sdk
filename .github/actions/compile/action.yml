@@ -38,8 +38,8 @@ runs:
       shell: bash
       run: |
         KAS_CONTAINER=$RUNNER_TEMP/kas-container
-        echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
         chmod +x $KAS_CONTAINER
+        echo "KAS_CONTAINER=$KAS_CONTAINER" >> $GITHUB_ENV
 
     - name: Setup build variables and sstate-cache
       shell: bash
@@ -47,6 +47,16 @@ runs:
         INPUTS_CACHE_DIR: ${{ inputs.cache_dir }}
         INPUTS_USE_SSTATE: ${{ inputs.use_sstate }}
       run: |
+        # Validate inputs: reject values containing newlines or path traversal
+        if printf '%s' "$INPUTS_CACHE_DIR" | grep -qP '[\r\n]|\.\.'; then
+          echo "ERROR: cache_dir input contains invalid characters" >&2
+          exit 1
+        fi
+        if printf '%s' "$INPUTS_USE_SSTATE" | grep -qP '[\r\n]'; then
+          echo "ERROR: use_sstate input contains invalid characters" >&2
+          exit 1
+        fi
+
         # use a monthly sstate cache folder
         echo "DL_DIR=${INPUTS_CACHE_DIR}/downloads" >> $GITHUB_ENV
 
