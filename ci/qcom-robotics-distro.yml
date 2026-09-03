@@ -10,7 +10,7 @@ repos:
     branch: wrynose
   meta-qcom:
     url: https://github.com/qualcomm-linux/meta-qcom
-    commit: ef0004df267743cc89d6a09bc724bc99ff541c01 
+    commit: f415a09a64e1a282fe9ca1efa47b911caaffe1b8
   oe-core:
     url: https://github.com/openembedded/openembedded-core
     layers:
@@ -19,6 +19,7 @@ repos:
       fix-BSD-license-missing:
         repo: meta-qcom-robotics-sdk
         path: patches/Initial-commit-of-license.patch
+    commit: f09a0f28aeb54ddd90415dd458338e1565bb5a49
   meta-ros:
     url: https://github.com/ros/meta-ros.git
     branch: wrynose
@@ -42,7 +43,9 @@ repos:
       remove-rosbag2-compressionn-zstd-bbappend:
         repo: meta-qcom-robotics-sdk
         path: patches/0001-fix-remove-bbappend-and-patch-for-rosbag2-compressio.patch
-    commit: 7e5153fb3dae940cfaa2d823df651bbb1f768c79
+    commit: c671acf8a948e22a614a6d6d1dcf18bdf4113df5
+  meta-qcom-distro:
+    commit: 55aae963e53a82c637fcd4f9ed58108252b0346c
 local_conf_header:
   resource_limitation: '# Capture the count of cpu cores available from the host.
 
