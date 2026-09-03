@@ -94,5 +94,11 @@ local_conf_header:
     PARALLEL_MAKE ?= "-j ${THREAD_COUNT} -l ${THREAD_COUNT}"
 
     '
+  license_qa: 'ERROR_QA:remove = "license-format"
+
+    '
+  tmpdir: 'TMPDIR = "${TOPDIR}/tmp"
+
+    '
 distro: qcom-robotics-ros2-jazzy
 target: qcom-robotics-image
