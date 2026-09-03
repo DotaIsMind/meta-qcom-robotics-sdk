@@ -158,9 +158,9 @@ runs:
           if [ -n "$oss_src" ]; then
             tar -czf "$uploads_dir/qirp-sdk.tar.gz" -C "$sdk_dir" "$(basename "$oss_src")"
           fi
-          prop_src=$(find "$sdk_dir/" -maxdepth 1 -type f -name "qirp-sdk-proprietary_*.tar.gz" | head -1)
+          prop_src=$(find "$sdk_dir/" -maxdepth 1 -type f -name "qirp-proprietary-sdk_*.tar.gz" | head -1)
           if [ -n "$prop_src" ]; then
-            tar -czf "$uploads_dir/qirp-sdk-proprietary.tar.gz" -C "$sdk_dir" "$(basename "$prop_src")"
+            tar -czf "$uploads_dir/qirp-proprietary-sdk.tar.gz" -C "$sdk_dir" "$(basename "$prop_src")"
           fi
           if [ -z "$oss_src" ] && [ -z "$prop_src" ]; then
             echo "WARNING: No QIRP-SDK tarballs found in $sdk_dir"
